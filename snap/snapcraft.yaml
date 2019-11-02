@@ -1,15 +1,74 @@
-name: my-snap-name # you probably want to 'snapcraft register <name>'
-version: '0.1' # just for humans, typically '1.2+git' or '1.3.2'
-summary: Single-line elevator pitch for your amazing snap # 79 char long summary
+name: video-transcoding
+base: core18 # the base snap is the execution environment for this snap
+adopt-info: video-transcoding
+summary: Tools to transcode, inspect and convert videos.
 description: |
-  This is my-snap's description. You have a paragraph or two to tell the
-  most important story about your snap. Keep it under 100 words though,
-  we live in tweetspace and your description wants to look good in the snap
-  store.
+  Video Transcoding is a package of tools to transcode, inspect
+  and convert videos.
+grade: stable
+confinement: strict
 
-confinement: devmode # use 'strict' once you have the right plugs and slots
+apps:
+  transcode-video:
+    command: transcode-video
+  detect-crop:
+    command: detect-crop
+  convert-video:
+    command: convert-video
+  query-handbrake-log:
+    command: query-handbrake-log
+    
+plugs:
+  desktop:
+  desktop-legacy:
+  home:
+  removable-media:
 
 parts:
-  my-part:
-    # See 'snapcraft plugins'
+  video-transcoding:
+    source: https://github.com/donmelton/video_transcoding.git
+    plugin: ruby
+    gems:
+      - video_transcoding
+    stage-packages:
+      - mp4v2-utils
+      - libgpm2
+    stage-snaps:
+      - ffmpeg
+    override-pull: |
+      snapcraftctl pull
+      snapcraftctl set-version "$(cat lib/video_transcoding/version.rb | grep VERSION | cut -d"'" -f2)"
+
+  mkvtoolnix:
     plugin: nil
+    stage-snaps:
+      - mkvtoolnix-jz
+    stage:
+      - -usr/lib/*/libGLX*
+      - -usr/lib/*/libglapi*
+      - -usr/lib/*/libxkbcommon*
+      - -usr/share/doc/libexpat1
+      - -usr/share/doc/libglapi*
+      - -usr/share/drirc.d
+      - -lib/*/libexpat*
+      - -usr/lib/*/libexpatw*
+      - -usr/lib/*/libQt*
+      - -usr/lib/*/qt5
+      - -usr/lib/*/dri
+      - -usr/lib/*/vdpau
+      - -usr/lib/locale
+      - -share/applications
+      - -share/man
+      - -bin/desktop-launch
+      - -flavor-select
+
+  handbrake-cli:
+    plugin: nil
+    stage-snaps:
+      - handbrake-jz
+    stage: 
+      - -lib/*/libexpat*
+      - -usr/lib/*/libexpatw*
+      - -usr/lib/*/libidn2*
+      - -bin/desktop-launch
+      - -flavor-select
